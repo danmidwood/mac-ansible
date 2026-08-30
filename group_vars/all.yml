@@ -10,6 +10,7 @@ homebrew_formulae:
   - zsh
   - tmux
   - herdr
+  - wormhole-william
 
 # GUI apps installed via Homebrew Cask.
 #
