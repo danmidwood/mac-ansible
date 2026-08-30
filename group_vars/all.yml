@@ -6,6 +6,7 @@ homebrew_taps: []
 # Command-line formulae to keep installed and up to date.
 homebrew_formulae:
   - ansible
+  - chezmoi
 
 # GUI apps installed via Homebrew Cask.
 #
@@ -17,6 +18,7 @@ homebrew_casks:
   - name: brave-browser
     install_options: [adopt]
   - name: claude
+  - name: hammerspoon
 
 # Note: Claude Code (the CLI) is intentionally NOT managed here -- see
 # roles/claude_code instead. It's installed via its own native
