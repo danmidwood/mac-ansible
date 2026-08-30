@@ -1,0 +1,73 @@
+---
+# Homebrew taps to enable. Leave empty unless a package you need lives in a
+# third-party tap.
+homebrew_taps: []
+
+# Command-line formulae to keep installed and up to date.
+homebrew_formulae:
+  - ansible
+
+# GUI apps installed via Homebrew Cask.
+#
+# `install_options: [adopt]` tells Homebrew to take over an app that's
+# already sitting in /Applications (e.g. downloaded manually) instead of
+# refusing to install because it's already there. It's only needed the
+# first time Homebrew adopts a given app.
+homebrew_casks:
+  - name: brave-browser
+    install_options: [adopt]
+  - name: claude
+
+# Note: Claude Code (the CLI) is intentionally NOT managed here -- see
+# roles/claude_code instead. It's installed via its own native
+# installer/self-updater (~/.local/bin/claude) by choice, rather than the
+# `claude-code` Homebrew cask, so it can auto-update in the background.
+
+# Run `brew cleanup` after installing/upgrading to remove old versions and
+# cached downloads.
+homebrew_cleanup: true
+
+# Git identity and defaults (global ~/.gitconfig)
+git_user_name: "Daniel Midwood"
+git_user_email: "dan@danmidwood.com"
+git_default_branch: master
+
+# SSH key used for git/general auth. Only generated if it doesn't already
+# exist -- re-running the playbook won't touch or overwrite it.
+ssh_key_type: ed25519
+ssh_key_path: "{{ ansible_env.HOME }}/.ssh/id_{{ ssh_key_type }}"
+ssh_key_comment: "{{ git_user_email }}"
+
+# This machine's SSD is failing and sleep/standby/hibernation-related disk
+# activity triggers problems, so sleep is disabled system-wide as a
+# workaround. Trades battery life/heat for stability -- keep the lid open
+# or plugged in.
+pmset_settings:
+  sleep: 0
+  powernap: 0
+  standby: 0
+  hibernatemode: 0
+
+# Passwordless sudo for daniel, so tools/scripts (including this playbook)
+# don't need a password prompt to run pmset etc. Set up manually on this
+# machine on 2026-08-29; captured here so a future install reproduces it.
+# Trade-off: anything running as this user can gain root without a password
+# prompt as a checkpoint.
+sudoers_nopasswd_user: daniel
+
+# Optional macOS system preferences (`defaults write` equivalents), applied
+# via community.general.osx_defaults. Left empty by default since these are
+# personal taste and easy to lose track of -- add entries as you decide you
+# want them. Example:
+#
+# macos_defaults:
+#   - domain: NSGlobalDomain
+#     key: AppleShowAllExtensions
+#     type: bool
+#     value: true
+#   - domain: com.apple.finder
+#     key: AppleShowAllFiles
+#     type: bool
+#     value: true
+#     restart: cfprefsd
+macos_defaults: []

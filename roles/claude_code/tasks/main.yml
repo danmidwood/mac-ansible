@@ -1,0 +1,8 @@
+---
+# Native installer, matching the choice in group_vars/all.yml to let Claude
+# Code self-update rather than manage it via Homebrew. `creates` makes this
+# a no-op once it's installed -- re-running the playbook won't touch it.
+- name: Install Claude Code (native installer)
+  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/claude"

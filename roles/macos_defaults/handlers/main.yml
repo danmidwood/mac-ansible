@@ -1,0 +1,6 @@
+---
+- name: restart affected services
+  ansible.builtin.command: "killall {{ item }}"
+  loop: "{{ macos_defaults_restarts | default([]) }}"
+  failed_when: false
+  changed_when: true

@@ -1,0 +1,16 @@
+---
+- name: Apply macOS system defaults
+  community.general.osx_defaults:
+    domain: "{{ item.domain | default('NSGlobalDomain') }}"
+    key: "{{ item.key }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    state: present
+  loop: "{{ macos_defaults }}"
+  loop_control:
+    label: "{{ item.domain | default('NSGlobalDomain') }}.{{ item.key }}"
+  notify: restart affected services
+
+- name: Collect distinct restart targets from macos_defaults
+  ansible.builtin.set_fact:
+    macos_defaults_restarts: "{{ macos_defaults | selectattr('restart', 'defined') | map(attribute='restart') | unique | list }}"

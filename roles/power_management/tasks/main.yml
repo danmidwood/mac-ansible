@@ -1,0 +1,10 @@
+---
+# pmset has no reliable "already set" check, so this always runs `pmset -a`
+# for each setting. Harmless -- it converges to the same state every time.
+- name: Apply pmset settings
+  become: true
+  ansible.builtin.command: "pmset -a {{ item.key }} {{ item.value }}"
+  loop: "{{ pmset_settings | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}={{ item.value }}"
+  changed_when: false

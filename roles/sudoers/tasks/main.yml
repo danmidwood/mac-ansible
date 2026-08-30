@@ -1,0 +1,9 @@
+---
+- name: Grant passwordless sudo
+  become: true
+  community.general.sudoers:
+    name: "{{ sudoers_nopasswd_user }}-nopasswd"
+    state: present
+    user: "{{ sudoers_nopasswd_user }}"
+    commands: ALL
+    nopassword: true

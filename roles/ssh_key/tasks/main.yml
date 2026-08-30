@@ -1,0 +1,19 @@
+---
+- name: Ensure ~/.ssh directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.ssh"
+    state: directory
+    mode: "0700"
+
+- name: Generate SSH key pair
+  community.crypto.openssh_keypair:
+    path: "{{ ssh_key_path }}"
+    type: "{{ ssh_key_type }}"
+    comment: "{{ ssh_key_comment }}"
+    mode: "0600"
+  register: ssh_key_result
+
+- name: Show public key
+  ansible.builtin.debug:
+    msg: "{{ lookup('file', ssh_key_path + '.pub') }}"
+  when: ssh_key_result.changed

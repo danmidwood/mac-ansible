@@ -1,0 +1,44 @@
+---
+- name: Check if Xcode Command Line Tools are installed
+  ansible.builtin.command: xcode-select -p
+  register: xcode_clt_check
+  failed_when: false
+  changed_when: false
+
+- name: Install Xcode Command Line Tools
+  when: xcode_clt_check.rc != 0
+  block:
+    - name: Create placeholder file so softwareupdate lists the CLT package
+      ansible.builtin.file:
+        path: /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+        state: touch
+        mode: "0644"
+
+    - name: Find latest Command Line Tools package label
+      ansible.builtin.shell: |
+        softwareupdate -l |
+        grep -B 1 -E 'Command Line Tools' |
+        awk -F'\*' '/^ *\*/ {print $2}' |
+        sed -e 's/^ *Label: //' -e 's/^ *//' |
+        sort -V |
+        tail -n1
+      args:
+        executable: /bin/bash
+      register: xcode_clt_label
+      changed_when: false
+
+    - name: Fail with guidance if no CLT package was found
+      ansible.builtin.fail:
+        msg: >-
+          Could not find a Command Line Tools package via `softwareupdate -l`.
+          Run `xcode-select --install` manually and re-run this playbook.
+      when: xcode_clt_label.stdout | length == 0
+
+    - name: Install Command Line Tools
+      ansible.builtin.command: softwareupdate -i "{{ xcode_clt_label.stdout }}"
+      when: xcode_clt_label.stdout | length > 0
+
+    - name: Remove placeholder file
+      ansible.builtin.file:
+        path: /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+        state: absent

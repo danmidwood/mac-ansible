@@ -1,0 +1,38 @@
+---
+# Caps Lock -> Control, for all keyboards. `hidutil` only affects the
+# current login session, so a LaunchAgent re-applies it on every login too.
+- name: Install LaunchAgent to remap Caps Lock to Control at login
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/Library/LaunchAgents/com.local.KeyRemapping.plist"
+    mode: "0644"
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>Label</key>
+          <string>com.local.KeyRemapping</string>
+          <key>ProgramArguments</key>
+          <array>
+              <string>/usr/bin/hidutil</string>
+              <string>property</string>
+              <string>--set</string>
+              <string>{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+      </dict>
+      </plist>
+
+- name: Load the LaunchAgent
+  ansible.builtin.command: >-
+    launchctl load -w
+    "{{ ansible_env.HOME }}/Library/LaunchAgents/com.local.KeyRemapping.plist"
+  failed_when: false
+  changed_when: false
+
+- name: Apply the remap immediately for the current session
+  ansible.builtin.command: >-
+    hidutil property --set
+    '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}'
+  changed_when: false

@@ -1,0 +1,20 @@
+---
+- name: Configure macOS
+  hosts: localhost
+  connection: local
+  become: false
+  roles:
+    - xcode_clt
+    - role: homebrew
+      environment:
+        # Suppress Homebrew's "newer Command Line Tools" nag -- a false
+        # positive when a full Xcode.app is active via xcode-select but an
+        # older standalone CLT package is still registered (this machine).
+        HOMEBREW_NO_AUTO_UPDATE: "1"
+    - claude_code
+    - git
+    - ssh_key
+    - sudoers
+    - power_management
+    - keyboard
+    - macos_defaults

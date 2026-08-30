@@ -1,0 +1,30 @@
+---
+- name: Update Homebrew itself
+  community.general.homebrew:
+    update_homebrew: true
+
+- name: Ensure Homebrew taps are present
+  community.general.homebrew_tap:
+    name: "{{ homebrew_taps }}"
+    state: present
+  when: homebrew_taps | length > 0
+
+- name: Ensure formulae are installed and up to date
+  community.general.homebrew:
+    name: "{{ homebrew_formulae }}"
+    state: latest
+
+- name: Ensure casks are installed and up to date
+  community.general.homebrew_cask:
+    name: "{{ item.name | default(item) }}"
+    state: latest
+    install_options: "{{ item.install_options | default(omit) }}"
+  loop: "{{ homebrew_casks }}"
+  loop_control:
+    label: "{{ item.name | default(item) }}"
+
+- name: Clean up old versions and cached downloads
+  ansible.builtin.command: brew cleanup
+  register: brew_cleanup
+  changed_when: "'Removing' in brew_cleanup.stdout"
+  when: homebrew_cleanup | default(true)
