@@ -12,6 +12,7 @@
         # older standalone CLT package is still registered (this machine).
         HOMEBREW_NO_AUTO_UPDATE: "1"
     - claude_code
+    - ohmyzsh
     - git
     - ssh_key
     - sudoers

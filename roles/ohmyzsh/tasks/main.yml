@@ -1,0 +1,15 @@
+---
+# Not on Homebrew -- installed via its own script. KEEP_ZSHRC preserves the
+# existing ~/.zshrc rather than overwriting it (real config/theme/plugins
+# come later via chezmoi); RUNZSH/CHSH avoid dropping into an interactive
+# shell or prompting for a password during this automated run.
+- name: Install Oh My Zsh
+  ansible.builtin.shell: >-
+    sh -c "$(curl -fsSL
+    https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  environment:
+    RUNZSH: "no"
+    CHSH: "no"
+    KEEP_ZSHRC: "yes"
+  args:
+    creates: "{{ ansible_env.HOME }}/.oh-my-zsh"

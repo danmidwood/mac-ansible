@@ -7,6 +7,9 @@ homebrew_taps: []
 homebrew_formulae:
   - ansible
   - chezmoi
+  - zsh
+  - tmux
+  - herdr
 
 # GUI apps installed via Homebrew Cask.
 #
@@ -19,6 +22,8 @@ homebrew_casks:
     install_options: [adopt]
   - name: claude
   - name: hammerspoon
+  - name: ghostty
+  - name: emacs-app
 
 # Note: Claude Code (the CLI) is intentionally NOT managed here -- see
 # roles/claude_code instead. It's installed via its own native
