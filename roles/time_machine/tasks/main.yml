@@ -1,0 +1,23 @@
+---
+# Network Time Machine destination over SMB. The password isn't handled
+# here at all -- it relies on a matching entry already saved in this user's
+# Keychain (e.g. from connecting once via Finder's "Connect to Server" and
+# choosing to remember the password), which tmutil/NetFS looks up
+# automatically when mounting the share.
+- name: Check current Time Machine destinations
+  ansible.builtin.command: tmutil destinationinfo
+  register: tm_destinations
+  changed_when: false
+  failed_when: false
+
+- name: Add network Time Machine destination
+  become: true
+  ansible.builtin.command: >-
+    tmutil setdestination -a
+    smb://{{ time_machine_smb_user }}@{{ time_machine_smb_host }}/{{ time_machine_smb_share }}
+  when: time_machine_smb_share not in tm_destinations.stdout
+
+- name: Ensure Time Machine backups are enabled
+  become: true
+  ansible.builtin.command: tmutil enable
+  changed_when: false

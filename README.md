@@ -88,4 +88,5 @@ roles/sudoers/           passwordless sudo for daniel (needs sudo)
 roles/power_management/  disables sleep/standby (failing SSD workaround, needs sudo)
 roles/keyboard/          remaps Caps Lock to Control (LaunchAgent + hidutil)
 roles/macos_defaults/    optional system preferences
+roles/time_machine/      network (SMB) Time Machine destination, needs sudo
 ```

@@ -64,6 +64,13 @@ pmset_settings:
 # prompt as a checkpoint.
 sudoers_nopasswd_user: daniel
 
+# Network Time Machine destination (SMB share). No password lives here --
+# it relies on a matching credential already saved in this user's Keychain
+# (see roles/time_machine).
+time_machine_smb_user: daniel
+time_machine_smb_host: xps
+time_machine_smb_share: mbp_13_2017
+
 # Optional macOS system preferences (`defaults write` equivalents), applied
 # via community.general.osx_defaults. Left empty by default since these are
 # personal taste and easy to lose track of -- add entries as you decide you
