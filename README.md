@@ -74,6 +74,48 @@ at `~/.local/bin/claude` instead, so it can auto-update in the background.
 The Claude desktop app is a normal cask (`claude`) since it doesn't have
 that self-update mechanism.
 
+## Dotfiles
+
+`roles/dotfiles` clones the private
+[danmidwood/dotfiles](https://github.com/danmidwood/dotfiles) repo to
+`~/repos/dotfiles` and applies it with chezmoi. Being a private repo, the
+first clone on a new machine needs this machine's SSH key
+(`roles/ssh_key`) added to GitHub first — see "Adding an SSH key to
+GitHub on a new machine" below.
+
+`~/.gitconfig` itself is entirely chezmoi's (`dot_gitconfig.tmpl` in the
+dotfiles repo) — this repo no longer sets it directly. `roles/dotfiles`
+passes `git_user_email` and the fingerprint `roles/gpg_key` just generated
+to `chezmoi init --promptString ...`, so the dotfiles-managed gitconfig
+picks up this machine's identity and signing key without an interactive
+prompt.
+
+## GPG signing key
+
+`roles/gpg_key` generates a **fresh, passphrase-less** GPG signing key on
+each machine rather than copying one over from another — no private key
+material ever has to move between machines, mirroring `roles/ssh_key`.
+Passphrase-less is a deliberate trade (this machine already accepts others
+for convenience: passwordless sudo, sleep disabled): a passphrase would
+block every scripted/automated commit, not just interactive ones. Revoke
+and regenerate the key by hand if that trade-off ever needs to change.
+
+Like the SSH key, the first time this role runs it prints the new public
+key and a link to add it: https://github.com/settings/gpg/new. Until it's
+added there, GitHub just won't show your commits as "Verified" — nothing
+else depends on it, so there's no need to stop and add it before
+continuing (unlike the SSH key, which the very next role needs).
+
+## Adding an SSH key to GitHub on a new machine
+
+`roles/dotfiles` is the only role that needs GitHub to already trust this
+machine's key. On a brand new machine, the straightforward path is: just
+run the playbook. `roles/ssh_key` generates the key before `roles/dotfiles`
+runs, so the first attempt fails there with the exact public key and a
+link to paste it into (https://github.com/settings/keys) — add it, then
+re-run. Every other role already succeeded on that first run and is
+idempotent, so re-running only picks up where it left off.
+
 ## Time Machine (network/SMB destination)
 
 `roles/time_machine` points Time Machine at a network share and enables
@@ -106,8 +148,9 @@ group_vars/all.yml       package lists / preferences (edit this most often)
 roles/xcode_clt/         ensures Xcode Command Line Tools are installed
 roles/homebrew/          taps, formulae, casks, cleanup
 roles/claude_code/       installs Claude Code via its native installer
-roles/git/               global git identity, init.defaultbranch
 roles/ssh_key/           generates ~/.ssh/id_ed25519 if missing
+roles/gpg_key/           generates a passphrase-less GPG signing key if missing
+roles/dotfiles/          clones danmidwood/dotfiles, applies via chezmoi (owns ~/.gitconfig)
 roles/sudoers/           passwordless sudo for daniel (needs sudo)
 roles/power_management/  disables sleep/standby (failing SSD workaround, needs sudo)
 roles/keyboard/          remaps Caps Lock to Control (LaunchAgent + hidutil)

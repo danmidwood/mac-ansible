@@ -1,0 +1,72 @@
+---
+# Machine-specific GPG signing key for git commits -- generated fresh here
+# rather than copying an existing key from another machine, so no private
+# key material ever needs to move between machines (same approach as
+# roles/ssh_key: generate locally, add the public half to GitHub by hand).
+#
+# No passphrase (%no-protection): this machine already trades a security
+# checkpoint for convenience elsewhere (passwordless sudo, sleep disabled
+# for the failing SSD), and a passphrase would block every scripted/
+# automated commit, not just interactive ones. Revoke and regenerate this
+# key if that trade-off ever needs to change.
+- name: Check for an existing GPG secret key for {{ git_user_email }}
+  ansible.builtin.command: gpg --list-secret-keys --with-colons {{ git_user_email }}
+  register: gpg_existing_key
+  changed_when: false
+  failed_when: false
+
+- name: Write GPG batch key-generation spec
+  ansible.builtin.tempfile:
+    state: file
+    suffix: .gpgbatch
+  register: gpg_batch_file
+  when: gpg_existing_key.rc != 0
+
+- name: Populate GPG batch key-generation spec
+  ansible.builtin.copy:
+    dest: "{{ gpg_batch_file.path }}"
+    mode: "0600"
+    content: |
+      Key-Type: EDDSA
+      Key-Curve: ed25519
+      Subkey-Type: ECDH
+      Subkey-Curve: cv25519
+      Name-Real: {{ git_user_name }}
+      Name-Email: {{ git_user_email }}
+      Expire-Date: 0
+      %no-protection
+      %commit
+  when: gpg_existing_key.rc != 0
+
+- name: Generate GPG signing key
+  ansible.builtin.command: gpg --batch --gen-key {{ gpg_batch_file.path }}
+  when: gpg_existing_key.rc != 0
+
+- name: Remove GPG batch key-generation spec
+  ansible.builtin.file:
+    path: "{{ gpg_batch_file.path }}"
+    state: absent
+  when: gpg_existing_key.rc != 0
+
+- name: Look up the GPG key fingerprint
+  ansible.builtin.command: gpg --list-secret-keys --with-colons {{ git_user_email }}
+  register: gpg_key_info
+  changed_when: false
+
+- name: Record the GPG key fingerprint
+  ansible.builtin.set_fact:
+    gpg_key_fingerprint: "{{ (gpg_key_info.stdout_lines | select('match', '^fpr:') | list | first).split(':')[9] }}"
+
+- name: Export the public key to add to GitHub
+  ansible.builtin.command: gpg --armor --export {{ git_user_email }}
+  register: gpg_public_key
+  changed_when: false
+  when: gpg_existing_key.rc != 0
+
+- name: Show the public key to add to GitHub
+  ansible.builtin.debug:
+    msg: |
+      New GPG key generated (fingerprint {{ gpg_key_fingerprint }}).
+      Add it at https://github.com/settings/gpg/new :
+      {{ gpg_public_key.stdout }}
+  when: gpg_existing_key.rc != 0

@@ -1,0 +1,73 @@
+---
+# Private repo -- on a brand new machine, this clone fails until the SSH
+# key roles/ssh_key just generated is added to GitHub
+# (https://github.com/settings/keys). Rather than a raw git auth error,
+# fail with the actual public key and re-run instructions, then just
+# re-run the playbook once it's added -- idempotent, same pattern as the
+# rest of this repo's manual prerequisites.
+#
+# update: false is deliberate: this repo's history is managed by hand
+# (commit/push at your own pace), and ansible.builtin.git's default
+# (update: true) hard-resets an existing clone to match the remote branch
+# on every run -- which silently discards any local commits that haven't
+# been pushed yet. With update: false, this task only ever clones a
+# missing repo and never touches one that already exists.
+- name: Ensure parent directory for dotfiles clone exists
+  ansible.builtin.file:
+    path: "{{ dotfiles_dest | dirname }}"
+    state: directory
+    mode: "0755"
+
+- name: Clone dotfiles repo if missing
+  ansible.builtin.git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "{{ dotfiles_dest }}"
+    accept_hostkey: true
+    update: false
+  register: dotfiles_clone
+  ignore_errors: true
+
+- name: Fail with guidance if the dotfiles repo couldn't be fetched
+  ansible.builtin.fail:
+    msg: >-
+      Couldn't fetch {{ dotfiles_repo }} into {{ dotfiles_dest }}. It's a
+      private repo -- add this machine's SSH public key to
+      https://github.com/settings/keys, then re-run the playbook:
+      {{ lookup('file', ssh_key_path + '.pub') }}
+  when: dotfiles_clone is failed
+
+- name: Ensure chezmoi config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/chezmoi"
+    state: directory
+    mode: "0700"
+
+# chezmoi init's --promptString/--promptBool flags don't actually reach
+# promptStringOnce/promptBoolOnce (upstream bug: they still try to open a
+# TTY and fail non-interactively -- github.com/twpayne/chezmoi/issues/3345).
+# Seeding the [data] table directly works around it: promptStringOnce
+# finds the value already present and skips prompting, and `chezmoi init`
+# regenerates this file from .chezmoi.toml.tmpl around that seeded data
+# (comments, sourceDir, etc.), so it only needs to happen once.
+- name: Check whether chezmoi config already exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.config/chezmoi/chezmoi.toml"
+  register: chezmoi_config_stat
+
+- name: Seed this machine's git identity for chezmoi's "Once" prompts
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/chezmoi/chezmoi.toml"
+    mode: "0600"
+    content: |
+      [data]
+          email = {{ git_user_email | to_json }}
+          gpgKeyId = {{ (gpg_key_fingerprint | default('')) | to_json }}
+  when: not chezmoi_config_stat.stat.exists
+
+- name: Run chezmoi init
+  ansible.builtin.command: "chezmoi init --source={{ dotfiles_dest }}"
+  changed_when: false
+
+- name: Apply chezmoi
+  ansible.builtin.command: chezmoi apply
+  changed_when: false

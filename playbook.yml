@@ -13,8 +13,9 @@
         HOMEBREW_NO_AUTO_UPDATE: "1"
     - claude_code
     - ohmyzsh
-    - git
     - ssh_key
+    - gpg_key
+    - dotfiles
     - sudoers
     - power_management
     - keyboard

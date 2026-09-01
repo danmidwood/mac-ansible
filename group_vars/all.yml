@@ -12,6 +12,7 @@ homebrew_formulae:
   - herdr
   - wormhole-william
   - tailscale
+  - gnupg
 
 # GUI apps installed via Homebrew Cask.
 #
@@ -37,10 +38,13 @@ homebrew_casks:
 # cached downloads.
 homebrew_cleanup: true
 
-# Git identity and defaults (global ~/.gitconfig)
+# Git identity. ~/.gitconfig itself is no longer set here -- roles/dotfiles
+# (chezmoi) fully owns it now. These two are still used to: generate this
+# machine's GPG signing key (roles/gpg_key) with a matching identity, and
+# seed chezmoi's "email" template prompt so the dotfiles-managed gitconfig
+# picks it up on `chezmoi init` without an interactive prompt.
 git_user_name: "Daniel Midwood"
 git_user_email: "dan@danmidwood.com"
-git_default_branch: master
 
 # SSH key used for git/general auth. Only generated if it doesn't already
 # exist -- re-running the playbook won't touch or overwrite it.
@@ -64,6 +68,11 @@ pmset_settings:
 # Trade-off: anything running as this user can gain root without a password
 # prompt as a checkpoint.
 sudoers_nopasswd_user: daniel
+
+# Dotfiles, managed by chezmoi. Private repo -- see roles/dotfiles and the
+# README for the one-time SSH key step this needs on a new machine.
+dotfiles_repo: git@github.com:danmidwood/dotfiles.git
+dotfiles_dest: "{{ ansible_env.HOME }}/repos/dotfiles"
 
 # Network Time Machine destination (SMB share). No password lives here --
 # it relies on a matching credential already saved in this user's Keychain
