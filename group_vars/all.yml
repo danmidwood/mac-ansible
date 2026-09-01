@@ -26,6 +26,7 @@ homebrew_casks:
   - name: hammerspoon
   - name: ghostty
   - name: emacs-app
+  - name: iterm2
 
 # Note: Claude Code (the CLI) is intentionally NOT managed here -- see
 # roles/claude_code instead. It's installed via its own native
