@@ -1,9 +1,10 @@
 ---
 # Network Time Machine destination over SMB. The password isn't handled
-# here at all -- it relies on a matching entry already saved in this user's
-# Keychain (e.g. from connecting once via Finder's "Connect to Server" and
-# choosing to remember the password), which tmutil/NetFS looks up
-# automatically when mounting the share.
+# here at all: tmutil setdestination doesn't reliably pull it from any
+# Keychain (login or System) when run as root, so the destination has to
+# be added once, manually, outside Ansible -- see the README. Once it's
+# been added, `tmutil destinationinfo` already lists it and this role just
+# confirms it/enables backups on every subsequent run.
 - name: Check current Time Machine destinations
   ansible.builtin.command: tmutil destinationinfo
   register: tm_destinations

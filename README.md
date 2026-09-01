@@ -74,6 +74,30 @@ at `~/.local/bin/claude` instead, so it can auto-update in the background.
 The Claude desktop app is a normal cask (`claude`) since it doesn't have
 that self-update mechanism.
 
+## Time Machine (network/SMB destination)
+
+`roles/time_machine` points Time Machine at a network share and enables
+backups, but adding the destination needs two manual, one-time steps first
+— `tmutil` can't do either non-interactively, so the role only detects and
+confirms an already-configured destination (`tmutil destinationinfo`) and
+skips re-adding it on every later run.
+
+1. **Grant Full Disk Access** to whatever terminal app runs Ansible (e.g.
+   Ghostty): System Settings → Privacy & Security → Full Disk Access → add
+   the app → quit and reopen it. Without this, `tmutil setdestination`
+   fails with `setdestination requires Full Disk Access privileges`.
+2. **Add the destination once, interactively**, so the SMB password is
+   typed straight into `tmutil` and never touches this repo or Ansible:
+   ```
+   sudo tmutil setdestination -a -p smb://<user>@<host>/<share>
+   ```
+   (`-p` prompts for the password securely.) A matching entry in the login
+   or System Keychain is *not* enough on its own — `tmutil`, run as root by
+   this role, doesn't reliably look it up there.
+
+After both steps, `ansible-playbook playbook.yml` will see the destination
+already listed and just ensure backups are enabled.
+
 ## Structure
 
 ```
