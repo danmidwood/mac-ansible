@@ -13,6 +13,9 @@ homebrew_formulae:
   - wormhole-william
   - tailscale
   - gnupg
+  - docker
+  - colima
+  - docker-credential-helper
 
 # GUI apps installed via Homebrew Cask.
 #

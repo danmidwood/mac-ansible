@@ -1,0 +1,39 @@
+---
+# CLI-only Docker: no Docker Desktop, no sign-in nagging, no company-size
+# subscription terms to worry about (those only apply to the Docker
+# Desktop app -- Docker Engine itself is open source). `docker` is the
+# real client, `colima` runs the real Engine in a small Linux VM (`colima
+# start`, a manual/one-time step not run by this role -- starting a VM
+# isn't something to do unattended on every deploy).
+#
+# docker-credential-helper is installed either way so it's just sitting
+# there ready; wiring it up as the active credsStore does nothing on its
+# own -- it's only ever consulted if/when `docker login` is actually run.
+- name: Ensure ~/.docker directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.docker"
+    state: directory
+    mode: "0700"
+
+- name: Check for an existing Docker CLI config
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.docker/config.json"
+  register: docker_config_stat
+
+- name: Read existing Docker CLI config
+  ansible.builtin.slurp:
+    src: "{{ ansible_env.HOME }}/.docker/config.json"
+  register: docker_config_raw
+  when: docker_config_stat.stat.exists
+
+- name: Ensure osxkeychain is set as the Docker credential store
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.docker/config.json"
+    mode: "0600"
+    content: >-
+      {{
+        (
+          (docker_config_raw.content | b64decode | from_json)
+          if docker_config_stat.stat.exists else {}
+        ) | combine({'credsStore': 'osxkeychain'}) | to_nice_json
+      }}

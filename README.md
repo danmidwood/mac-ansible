@@ -85,10 +85,12 @@ GitHub on a new machine" below.
 
 `~/.gitconfig` itself is entirely chezmoi's (`dot_gitconfig.tmpl` in the
 dotfiles repo) — this repo no longer sets it directly. `roles/dotfiles`
-passes `git_user_email` and the fingerprint `roles/gpg_key` just generated
-to `chezmoi init --promptString ...`, so the dotfiles-managed gitconfig
-picks up this machine's identity and signing key without an interactive
-prompt.
+seeds `git_user_email` and the fingerprint `roles/gpg_key` just generated
+straight into chezmoi's `[data]` config before running `chezmoi init`, so
+the dotfiles-managed gitconfig picks up this machine's identity and
+signing key without an interactive prompt. (Not via `chezmoi init
+--promptString` — that flag doesn't actually reach `promptStringOnce`,
+see the comment in `roles/dotfiles/tasks/main.yml`.)
 
 ## GPG signing key
 
@@ -105,6 +107,23 @@ key and a link to add it: https://github.com/settings/gpg/new. Until it's
 added there, GitHub just won't show your commits as "Verified" — nothing
 else depends on it, so there's no need to stop and add it before
 continuing (unlike the SSH key, which the very next role needs).
+
+## Docker (CLI only, no Docker Desktop)
+
+`roles/docker` installs the `docker` CLI, `colima` (runs the real,
+upstream Docker Engine in a small Linux VM), and `docker-credential-helper`
+(so `docker login` stores credentials in the macOS Keychain instead of
+`~/.docker/config.json`'s default plaintext-ish base64). Docker Desktop's
+company-size subscription terms only apply to the Docker Desktop app
+itself -- Docker Engine is open source (Apache 2.0) and unaffected,
+whichever way you obtain it.
+
+The role sets `credsStore: osxkeychain` in `~/.docker/config.json`
+(merging with, not overwriting, anything already there), but that's
+inert until you actually run `docker login` -- nothing here signs you in
+or requires an account. Starting the VM (`colima start`) is a deliberate
+manual step, not run by this role: spinning up a VM isn't something to
+do unattended on every deploy.
 
 ## Adding an SSH key to GitHub on a new machine
 
@@ -148,6 +167,7 @@ group_vars/all.yml       package lists / preferences (edit this most often)
 roles/xcode_clt/         ensures Xcode Command Line Tools are installed
 roles/homebrew/          taps, formulae, casks, cleanup
 roles/claude_code/       installs Claude Code via its native installer
+roles/docker/            docker CLI + colima (no Docker Desktop), osxkeychain creds
 roles/ssh_key/           generates ~/.ssh/id_ed25519 if missing
 roles/gpg_key/           generates a passphrase-less GPG signing key if missing
 roles/dotfiles/          clones danmidwood/dotfiles, applies via chezmoi (owns ~/.gitconfig)
