@@ -28,3 +28,9 @@
   register: brew_cleanup
   changed_when: "'Removing' in brew_cleanup.stdout"
   when: homebrew_cleanup | default(true)
+
+- name: Remove formulae that are no longer needed as a dependency
+  ansible.builtin.command: brew autoremove
+  register: brew_autoremove
+  changed_when: "'Uninstalling' in brew_autoremove.stdout"
+  when: homebrew_autoremove | default(true)

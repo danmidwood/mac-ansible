@@ -41,6 +41,12 @@ homebrew_casks:
 # cached downloads.
 homebrew_cleanup: true
 
+# Run `brew autoremove` after cleanup to remove formulae that were only
+# pulled in as a dependency (e.g. an old python@3.x left behind after
+# something it backed bumped its pinned version) and are no longer needed
+# by anything installed. `brew cleanup` does not do this on its own.
+homebrew_autoremove: true
+
 # Git identity. ~/.gitconfig itself is no longer set here -- roles/dotfiles
 # (chezmoi) fully owns it now. These two are still used to: generate this
 # machine's GPG signing key (roles/gpg_key) with a matching identity, and

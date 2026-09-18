@@ -71,3 +71,24 @@
 - name: Apply chezmoi
   ansible.builtin.command: chezmoi apply
   changed_when: false
+
+# devtabs (chezmoi-managed, dot_local/bin/executable_devtabs) needs the
+# iterm2 Python module to talk to iTerm2's API. It runs under
+# `#!/usr/bin/env python3`, i.e. whatever python3 is first on PATH -- not
+# iTerm2's own bundled interpreter, which already has it. Installing into
+# that same resolved interpreter (rather than a hardcoded path) keeps this
+# working even as Homebrew bumps its pinned python@3.x version.
+- name: Find the python3 devtabs will actually run under
+  ansible.builtin.command: command -v python3
+  register: devtabs_python3
+  changed_when: false
+
+# --user keeps this out of Homebrew's managed site-packages.
+# --break-system-packages is required alongside it to get past Homebrew
+# Python's PEP 668 externally-managed-environment guard at all -- pip's
+# own error message recommends this pairing over disabling the guard
+# system-wide.
+- name: Ensure the iterm2 Python module is installed for devtabs
+  ansible.builtin.command: "{{ devtabs_python3.stdout }} -m pip install --user --break-system-packages iterm2"
+  register: devtabs_iterm2_pip
+  changed_when: "'Successfully installed' in devtabs_iterm2_pip.stdout"
