@@ -1,7 +1,13 @@
 ---
 # Homebrew taps to enable. Leave empty unless a package you need lives in a
-# third-party tap.
-homebrew_taps: []
+# third-party tap. Each entry is a tap name, or {name, url} when the tap
+# isn't hosted at the GitHub URL Homebrew assumes from the name alone.
+#
+# danmidwood/tools is a personal tap (hosted on xps, not GitHub) for tools of
+# mine that aren't published anywhere -- see its wt formula below.
+homebrew_taps:
+  - name: danmidwood/tools
+    url: "ssh://daniel@xps/~/repos/homebrew-tools.git"
 
 # Command-line formulae to keep installed and up to date.
 homebrew_formulae:
@@ -16,6 +22,7 @@ homebrew_formulae:
   - docker
   - colima
   - docker-credential-helper
+  - danmidwood/tools/wt
 
 # GUI apps installed via Homebrew Cask.
 #

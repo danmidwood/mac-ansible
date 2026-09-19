@@ -5,9 +5,12 @@
 
 - name: Ensure Homebrew taps are present
   community.general.homebrew_tap:
-    name: "{{ homebrew_taps }}"
+    name: "{{ item.name | default(item) }}"
+    url: "{{ item.url | default(omit) }}"
     state: present
-  when: homebrew_taps | length > 0
+  loop: "{{ homebrew_taps }}"
+  loop_control:
+    label: "{{ item.name | default(item) }}"
 
 - name: Ensure formulae are installed and up to date
   community.general.homebrew:
