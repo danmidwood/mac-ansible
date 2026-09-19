@@ -62,6 +62,7 @@
       [data]
           email = {{ git_user_email | to_json }}
           gpgKeyId = {{ (gpg_key_fingerprint | default('')) | to_json }}
+          wtProfile = {{ (wt_profile | default('')) | to_json }}
   when: not chezmoi_config_stat.stat.exists
 
 - name: Run chezmoi init
